@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
-import "./App.css";
 import {
   CometChatConversationsWithMessages,
   CometChatUIKit,
@@ -12,12 +12,13 @@ import { CometChatIncomingCall } from "@cometchat/chat-uikit-react";
 import { CometChatMessages } from "@cometchat/chat-uikit-react";
 
 import { CometChatCalls } from "@cometchat/calls-sdk-javascript";
-import { useQueryParams } from "./Test";
-import { Login } from "./components/Login";
-import { IsMobileViewContext } from "./IsMobileViewContext";
-import { Signup } from "./components/Signup";
-// import { loadingModalStyle } from "./style";
-import LoadingIconGif from "../src/assets/loading_icon.gif";
+import { useQueryParams } from "../../Test";
+import { Login } from "../Login";
+import { IsMobileViewContext } from "../../IsMobileViewContext";
+import { Signup } from "../Signup";
+import { loadingModalStyle } from "./style";
+import LoadingIconGif from "../../assets/loading_icon.gif";
+import CometChatLogo from "../../assets/cometchat_logo.png";
 
 function App() {
   const queryParams: any = useQueryParams();
@@ -315,34 +316,34 @@ function App() {
       />
     );
   }
-  // function getLoadingModal() {
-  //   return (
-  //     <div style={loadingModalStyle(interestingAsyncOpStarted)}>
-  //       <div
-  //         style={{
-  //           padding: "16px",
-  //           borderRadius: "8px",
-  //           backgroundColor: "white",
-  //           display: "flex",
-  //           flexDirection: "column",
-  //           justifyContent: "center",
-  //           alignItems: "center",
-  //           rowGap: "8px",
-  //         }}
-  //       >
-  //         <img
-  //           src={CometChatLogo}
-  //           alt='CometChat logo'
-  //           style={{
-  //             width: "240px",
-  //             height: "240px",
-  //           }}
-  //         />
-  //         <img src={LoadingIconGif} alt='Laoding icon' />
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  function getLoadingModal() {
+    return (
+      <div style={loadingModalStyle(interestingAsyncOpStarted)}>
+        <div
+          style={{
+            padding: "16px",
+            borderRadius: "8px",
+            backgroundColor: "white",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            rowGap: "8px",
+          }}
+        >
+          <img
+            src={CometChatLogo}
+            alt='CometChat logo'
+            style={{
+              width: "240px",
+              height: "240px",
+            }}
+          />
+          <img src={LoadingIconGif} alt='Laoding icon' />
+        </div>
+      </div>
+    );
+  }
 
   function getHome() {
     return (
@@ -391,7 +392,7 @@ function App() {
         </Routes>
       </IsMobileViewContext.Provider>
 
-      {/* {getLoadingModal()} */}
+      {getLoadingModal()}
     </div>
   );
 }
