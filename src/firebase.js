@@ -71,25 +71,54 @@ export default async function firebaseInitialize() {
 
     notification.onclick = function (event) {
       console.log("messageData.category", messageData.category);
+
+      // Define the relative URL path for your chat page
+      let chatUrl = "/chats";
+
       if (
         messageData.category === "call" ||
         callType === "audio" ||
         callType === "video" ||
         sessionid
       ) {
-        window.open(
-          `http://localhost:3000/chats?uid=${uid}&callType=${callType}&receiverType=${receiverType}&sessionid=${sessionid}`
-        );
+        // Add query parameters to the chat URL if necessary
+        chatUrl += `?uid=${uid}&callType=${callType}&receiverType=${receiverType}&sessionid=${sessionid}`;
+      } else if (guid) {
+        // Add query parameters to the chat URL if 'guid' is available
+        chatUrl += `?guid=${guid}`;
       } else {
-        if (guid) {
-          window.open(`http://localhost:3000/chats?guid=${guid}`);
-        } else {
-          window.open(`http://localhost:3000/chats?uid=${uid}`);
-        }
+        // Add query parameters to the chat URL if 'uid' is available
+        chatUrl += `?uid=${uid}`;
       }
 
+      // Open a new window with the dynamically generated chat URL
+      window.open(chatUrl);
+
+      // Close the notification
       notification.close();
     };
+
+    // notification.onclick = function (event) {
+    //   console.log("messageData.category", messageData.category);
+    //   if (
+    //     messageData.category === "call" ||
+    //     callType === "audio" ||
+    //     callType === "video" ||
+    //     sessionid
+    //   ) {
+    //     window.open(
+    //       `http://localhost:3000/chats?uid=${uid}&callType=${callType}&receiverType=${receiverType}&sessionid=${sessionid}`
+    //     );
+    //   } else {
+    //     if (guid) {
+    //       window.open(`http://localhost:3000/chats?guid=${guid}`);
+    //     } else {
+    //       window.open(`http://localhost:3000/chats?uid=${uid}`);
+    //     }
+    //   }
+
+    //   notification.close();
+    // };
   });
 }
 

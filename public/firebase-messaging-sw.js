@@ -79,9 +79,40 @@ if (messaging) {
       );
 
       // Define the notification click handler directly as a function
+      // self.addEventListener("notificationclick", (event) => {
+      //   console.log("clicked??????????????????/", event);
+      //   event.notification.close(); // Close the notification
+
+      //   if (
+      //     messageData.category === "call" ||
+      //     callType === "audio" ||
+      //     callType === "video" ||
+      //     sessionid
+      //   ) {
+      //     event.waitUntil(
+      //       clients.openWindow(
+      //         `http://localhost:3000/chats?uid=${uid}&callType=${callType}&receiverType=${receiverType}&sessionid=${sessionid}`
+      //       )
+      //     );
+      //   } else {
+      //     if (guid) {
+      //       event.waitUntil(
+      //         clients.openWindow(`http://localhost:3000/chats?guid=${guid}`)
+      //       );
+      //     } else {
+      //       event.waitUntil(
+      //         clients.openWindow(`http://localhost:3000/chats?uid=${uid}`)
+      //       );
+      //     }
+      //   }
+      // });
+
       self.addEventListener("notificationclick", (event) => {
         console.log("clicked??????????????????/", event);
         event.notification.close(); // Close the notification
+
+        // Define the relative URL path for your chat page
+        let chatUrl = "/chats";
 
         if (
           messageData.category === "call" ||
@@ -89,34 +120,18 @@ if (messaging) {
           callType === "video" ||
           sessionid
         ) {
-          event.waitUntil(
-            clients.openWindow(
-              `http://localhost:3000/chats?uid=${uid}&callType=${callType}&receiverType=${receiverType}&sessionid=${sessionid}`
-            )
-          );
+          // Add query parameters to the chat URL if necessary
+          chatUrl += `?uid=${uid}&callType=${callType}&receiverType=${receiverType}&sessionid=${sessionid}`;
+        } else if (guid) {
+          // Add query parameters to the chat URL if 'guid' is available
+          chatUrl += `?guid=${guid}`;
         } else {
-          if (guid) {
-            event.waitUntil(
-              clients.openWindow(`http://localhost:3000/chats?guid=${guid}`)
-            );
-          } else {
-            event.waitUntil(
-              clients.openWindow(`http://localhost:3000/chats?uid=${uid}`)
-            );
-          }
+          // Add query parameters to the chat URL if 'uid' is available
+          chatUrl += `?uid=${uid}`;
         }
+
+        event.waitUntil(clients.openWindow(chatUrl));
       });
-
-      //              `http://localhost:3000/chats?openChatwith=${userId}`
-
-      // var notification = new Notification(
-      //   notificationTitle,
-      //   notificationOptions
-      // );
-      // notification.onclick = () =>
-      //   function () {
-      //     window.open("https://www.google.com/");
-      //   };
     });
   } catch (err) {
     console.log(err);
