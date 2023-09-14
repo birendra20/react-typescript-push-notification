@@ -3,42 +3,48 @@ import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
 import {
   CometChatConversationsWithMessages,
+  CometChatTheme,
   CometChatUIKit,
 } from "@cometchat/chat-uikit-react";
 import { useEffect, useRef, useState } from "react";
-// import Login from "./login/Login";
 import { CometChat } from "@cometchat/chat-sdk-javascript";
 import { CometChatIncomingCall } from "@cometchat/chat-uikit-react";
 import { CometChatMessages } from "@cometchat/chat-uikit-react";
 
 import { CometChatCalls } from "@cometchat/calls-sdk-javascript";
-import { useQueryParams } from "../../Test";
+import { useQueryParams } from "../../custom-hooks";
 import { Login } from "../Login";
 import { IsMobileViewContext } from "../../IsMobileViewContext";
 import { Signup } from "../Signup";
-import { loadingModalStyle } from "./style";
+import { appStyle, loadingModalStyle } from "./style";
 import LoadingIconGif from "../../assets/loading_icon.gif";
 import CometChatLogo from "../../assets/cometchat_logo.png";
+import PowerOff from "../../assets/power-off.png";
+
+import { Button } from "../Button";
 
 function App() {
-  const queryParams: any = useQueryParams();
+  const queryParams = useQueryParams();
   let { uid, callType, guid, sessionid, receiverType } = queryParams;
   const [isMobileView, setIsMobileView] = useState(false);
+  const [theme, setTheme] = useState(new CometChatTheme({}));
 
   const [interestingAsyncOpStarted, setInterestingAsyncOpStarted] =
     useState(false);
   const [loggedInUser, setLoggedInUser] = useState<
     CometChat.User | null | undefined
   >();
-  const [chatWithUser, setChatWithUser] = useState(null);
-  const [chatWithGroup, setChatWithGroup] = useState(null);
+  const [chatWithUser, setChatWithUser] = useState<CometChat.User>();
+  const [chatWithGroup, setChatWithGroup] = useState<CometChat.Group>();
 
-  const [callObject, setCallObject] = useState(null);
-  const [homeSessionId, setHomeSessionId] = useState(null);
-  const navigate = useNavigate();
+  const [callObject, setCallObject] = useState<CometChat.Call>();
+  const [homeSessionId, setHomeSessionId] = useState<string>();
+  // const navigate = useNavigate();
   const myElementRef = useRef(null);
   const refCount = useRef(0);
   // let isCallEnded = false;
+
+  const [isCallAccepted, setIsCallAccepted] = useState(false);
 
   useEffect(() => {
     function handleResize() {
@@ -50,27 +56,33 @@ function App() {
 
   useEffect(() => {
     if (uid && callType && receiverType) {
-      var call: any = new CometChat.Call(uid, callType, receiverType);
+      var call: CometChat.Call = new CometChat.Call(
+        uid,
+        callType,
+        receiverType
+      );
       if (call) {
         setCallObject(call);
       }
     }
 
     return () => {
-      setCallObject(null);
+      setCallObject(undefined);
     };
   }, [uid, callType, receiverType]);
 
   const acceptCall = async (sessionid: any) => {
     await CometChat.acceptCall(sessionid).then(
       async (call: any) => {
-        setCallObject(null);
+        setIsCallAccepted(true);
+
+        setCallObject(undefined);
         console.log(
           "Call @cometchat/chat-sdk-javascriptaccepted successfully:",
           call
         );
         let CurrentSessionId = call.sessionId;
-        const authToken = await loggedInUser?.getAuthToken()!;
+        const authToken: string = loggedInUser?.getAuthToken()!;
         let callToken = await CometChatCalls.generateToken(
           CurrentSessionId,
           authToken
@@ -88,11 +100,12 @@ function App() {
               onCallEndButtonPressed: () => {
                 CometChatCalls.endSession();
                 CometChat.endCall(CurrentSessionId);
-                if (window.location.href !== "/") {
-                  navigate({
-                    pathname: "/",
-                  });
-                }
+                // if (window.location.href !== "/") {
+                //   navigate({
+                //     pathname: "/",
+                //   });
+                // }
+                setIsCallAccepted(false);
               },
               onCallEnded: () => {
                 console.log("Call ended");
@@ -100,11 +113,13 @@ function App() {
                 console.log("clilcked in on");
                 CometChatCalls.endSession();
                 CometChat.endCall(CurrentSessionId);
-                if (window.location.href !== "http://localhost:3000/") {
-                  navigate({
-                    pathname: "/",
-                  });
-                }
+                setIsCallAccepted(false);
+
+                // if (window.location.href !== "http://localhost:3000/") {
+                //   navigate({
+                //     pathname: "/",
+                //   });
+                // }
               },
 
               onError: (error: any) => {
@@ -146,13 +161,11 @@ function App() {
           .build();
 
         const htmlElement = myElementRef.current;
-        CometChatCalls.startSession(callToken.token, callSettings, htmlElement!)
-          .then((response: any) => {
-            console.log("call session success", response);
-          })
-          .catch((error: any) => {
-            console.log("call session failure", error);
-          });
+        CometChatCalls.startSession(
+          callToken.token,
+          callSettings,
+          htmlElement!
+        );
       },
       (error: any) => {
         console.log("Call acceptance failed with error", error);
@@ -166,22 +179,22 @@ function App() {
     CometChat.addCallListener(
       listnerID,
       new CometChat.CallListener({
-        onIncomingCallReceived: (call: any) => {
+        onIncomingCallReceived: (call: CometChat.Call) => {
           console.log("Incoming call:", call);
-          setHomeSessionId(call.sessionId);
+          setHomeSessionId(call.getSessionId());
           // setHomeCallType(call.type);
           setCallObject(call);
         },
-        onOutgoingCallAccepted: (call: any) => {
+        onOutgoingCallAccepted: (call: CometChat.Call) => {
           console.log("Outgoing call accepted:", call);
         },
-        onOutgoingCallRejected: (call: any) => {
+        onOutgoingCallRejected: (call: CometChat.Call) => {
           console.log("Outgoing call rejected:", call);
         },
-        onIncomingCallCancelled: (call: any) => {
-          console.log("Incoming call calcelled:", call);
+        onIncomingCallCancelled: (call: CometChat.Call) => {
+          console.log("Incoming call cancelled:", call);
         },
-        onCallEndedMessageReceived: (call: any) => {
+        onCallEndedMessageReceived: (call: CometChat.Call) => {
           console.log("CallEnded Message:", call);
         },
       })
@@ -193,17 +206,17 @@ function App() {
       refCount.current = 0;
     };
   }, [sessionid]);
-  const cancelCall = async (sessionid: any) => {
-    // setCallObject(undefined);
+
+  const cancelCall = async (sessionid: string) => {
+    setCallObject(undefined);
     console.log("rejected?????????????????????????????????????????");
-    var status = CometChat.CALL_STATUS.REJECTED;
-    setCallObject(null);
+    let status: string = CometChat.CALL_STATUS.REJECTED;
 
     CometChat.rejectCall(sessionid, status).then(
-      (call: any) => {
+      (call: CometChat.Call) => {
         console.log("Call rejected successfully", call);
       },
-      (error: any) => {
+      (error: CometChat.Call) => {
         console.log("Call rejection failed with error:", error);
       }
     );
@@ -212,25 +225,25 @@ function App() {
   useEffect(() => {
     if (guid && !uid) {
       CometChat.getGroup(guid)
-        .then((group: any) => {
+        .then((group: CometChat.Group) => {
           if ("guid" in group) {
             setChatWithGroup(group);
           }
         })
-        .catch((group: any) => {
-          console.log("group does not exit", group);
+        .catch((error: any) => {
+          console.log("group does not exit", error);
         });
     }
 
     if (uid && !guid) {
       CometChat.getUser(uid)
-        .then((user: any) => {
+        .then((user: CometChat.User) => {
           if ("uid" in user) {
             setChatWithUser(user);
           }
         })
-        .catch((user: any) => {
-          console.log("user does not exit", user);
+        .catch((error: any) => {
+          console.log("user does not exit", error);
         });
     }
   }, [guid, uid]);
@@ -259,51 +272,56 @@ function App() {
     );
   };
 
-  function IncrementCount() {
+  function IncrementCountToDeclineCall() {
     refCount.current = refCount.current + 1;
   }
-
   function getChatsModule() {
     return (
       <>
-        <div
-          style={{ height: "100vh" }}
-          ref={myElementRef}
-          id='ELEMENT_ID'
-          key='chatPage'
-        >
-          {chatWithGroup ? (
-            <>
-              <CometChatMessages group={chatWithGroup} key={guid} />
+        {isCallAccepted ? (
+          <div
+            style={{ height: "100%", width: "100%" }}
+            ref={myElementRef}
+          ></div>
+        ) : (
+          <div
+            style={{ height: "100%", width: "100%" }}
+            id='ELEMENT_ID'
+            key='chatPage'
+          >
+            {chatWithGroup ? (
+              <>
+                <CometChatMessages group={chatWithGroup} key={guid} />
 
-              {callObject && (
-                <CometChatIncomingCall
-                  call={callObject}
-                  onAccept={() => acceptCall(sessionid)}
-                />
-              )}
-            </>
-          ) : (
-            <>
-              {chatWithUser && (
-                <CometChatMessages user={chatWithUser} key={uid} />
-              )}
-              {callObject && (
-                <CometChatIncomingCall
-                  call={callObject}
-                  onAccept={() => acceptCall(sessionid)}
-                  onDecline={() => {
-                    IncrementCount();
+                {callObject && (
+                  <CometChatIncomingCall
+                    call={callObject}
+                    onAccept={() => acceptCall(sessionid)}
+                  />
+                )}
+              </>
+            ) : (
+              <>
+                {chatWithUser && (
+                  <CometChatMessages user={chatWithUser} key={uid} />
+                )}
+                {callObject && (
+                  <CometChatIncomingCall
+                    call={callObject}
+                    onAccept={() => acceptCall(sessionid)}
+                    onDecline={() => {
+                      IncrementCountToDeclineCall();
 
-                    if (refCount.current > 2) {
-                      cancelCall(sessionid);
-                    }
-                  }}
-                />
-              )}
-            </>
-          )}
-        </div>
+                      if (refCount.current > 2) {
+                        cancelCall(sessionid);
+                      }
+                    }}
+                  />
+                )}
+              </>
+            )}
+          </div>
+        )}
       </>
     );
   }
@@ -350,23 +368,48 @@ function App() {
       <>
         <div
           className='App'
-          style={{ height: "100vh" }}
-          ref={myElementRef}
+          style={{ height: "100%", width: "100%" }}
           id='ELEMENT_ID'
           key='homePage'
         >
           {loggedInUser ? (
-            <>
-              <button onClick={() => logout()}>Logout</button>
+            <div style={{ height: "97%", width: "100%" }}>
+              {isCallAccepted ? (
+                <div
+                  style={{ height: "100%", width: "100%" }}
+                  ref={myElementRef}
+                ></div>
+              ) : (
+                <>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "row-reverse",
+                    }}
+                  >
+                    <Button
+                      iconURL={PowerOff}
+                      hoverText='Logout'
+                      onClick={logout}
+                      buttonStyle={{
+                        backgroundColor: "transparent",
+                        cursor: "pointer",
+                        buttonIconTint: theme.palette.getAccent(),
+                        border: "none",
+                      }}
+                    />
+                  </div>
 
-              <CometChatConversationsWithMessages key='homePageCometChatConversationsWithMessages' />
-              {callObject && (
-                <CometChatIncomingCall
-                  call={callObject}
-                  onAccept={() => acceptCall(homeSessionId)}
-                />
+                  <CometChatConversationsWithMessages key='CometChatConversationsWithMessages-homePage' />
+                  {callObject && (
+                    <CometChatIncomingCall
+                      call={callObject}
+                      onAccept={() => acceptCall(homeSessionId)}
+                    />
+                  )}
+                </>
               )}
-            </>
+            </div>
           ) : (
             <Login
               loggedInUser={loggedInUser}
@@ -379,20 +422,39 @@ function App() {
     );
   }
   return (
-    <div>
-      <IsMobileViewContext.Provider value={isMobileView}>
-        <Routes>
-          <Route path='/'>
-            <Route path='/' element={getHome()}></Route>
-            <Route path='signup' element={getSignup()} />
+    <div style={appStyle(theme)}>
+      <div
+        style={{
+          height: "100px",
+          width: "800px",
+        }}
+      >
+        <div
+          style={{
+            boxSizing: "border-box",
+            height: "100%",
+            width: "100%",
+            position: "absolute",
+            top: "0",
+            left: "0",
+            backgroundColor: "white",
+          }}
+        >
+          <IsMobileViewContext.Provider value={isMobileView}>
+            <Routes>
+              <Route path='/'>
+                <Route path='/' element={getHome()}></Route>
+                <Route path='signup' element={getSignup()} />
 
-            <Route path='chats' element={getChatsModule()} />
-          </Route>
-          <Route path='*' element={<Navigate to='/' />} />
-        </Routes>
-      </IsMobileViewContext.Provider>
+                <Route path='chats' element={getChatsModule()} />
+              </Route>
+              <Route path='*' element={<Navigate to='/' />} />
+            </Routes>
+          </IsMobileViewContext.Provider>
 
-      {getLoadingModal()}
+          {getLoadingModal()}
+        </div>
+      </div>
     </div>
   );
 }
