@@ -54,8 +54,9 @@ export default async function firebaseInitialize() {
     const callType = messageData.type;
     const receiverType = messageData.receiverType;
     const sessionid = messageData?.data?.entities?.on?.entity?.sessionid;
-    // const userId = guid || uid;
-    const myIcon = messageData?.data?.entities?.sender?.entity?.avatar;
+    const myIcon =
+      messageData?.data?.entities?.sender?.entity?.avatar ||
+      messageData?.data?.entities?.by?.entity?.avatar;
     console.log(guid, myIcon);
     // Store the uid in localStorage
     localStorage.setItem("uid", uid);

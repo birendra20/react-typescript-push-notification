@@ -102,7 +102,7 @@ function App() {
                 CometChat.endCall(CurrentSessionId);
                 // if (window.location.href !== "/") {
                 //   navigate({
-                //     pathname: "/",
+                //     pathname: "/",   //tod
                 //   });
                 // }
                 setIsCallAccepted(false);
@@ -209,7 +209,6 @@ function App() {
 
   const cancelCall = async (sessionid: string) => {
     setCallObject(undefined);
-    console.log("rejected?????????????????????????????????????????");
     let status: string = CometChat.CALL_STATUS.REJECTED;
 
     CometChat.rejectCall(sessionid, status).then(
@@ -384,7 +383,8 @@ function App() {
                   <div
                     style={{
                       display: "flex",
-                      flexDirection: "row-reverse",
+                      padding: "10px",
+                      // flexDirection: "row-reverse",
                     }}
                   >
                     <Button
@@ -400,7 +400,7 @@ function App() {
                     />
                   </div>
 
-                  <CometChatConversationsWithMessages key='CometChatConversationsWithMessages-homePage' />
+                  <CometChatConversationsWithMessages />
                   {callObject && (
                     <CometChatIncomingCall
                       call={callObject}
